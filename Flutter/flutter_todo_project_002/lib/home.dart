@@ -19,65 +19,64 @@ class _HomeState extends State<Home>{
         title: Text(
           "Minhas tarefas"
         ),
+      ),
+      backgroundColor: Colors.purple,
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
         backgroundColor: Colors.purple,
-        floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
-        floatingActionButton: FloatingActionButton(
-          child: Icon(Icons.add),
-          backgroundColor: Colors.purple,
-          onPressed: (){
-            showDialog(
-              context: context,
-              builder: (context){
-                return AlertDialog(
-                  title: Text(
-                    "Adicionar Tarefa"
+        onPressed: (){
+          showDialog(
+            context: context,
+            builder: (context){
+              return AlertDialog(
+                title: Text(
+                  "Adicionar Tarefa"
+                ),
+                content: TextField(
+                  decoration: InputDecoration(
+                    labelText: "Informe a sua tarefa"
                   ),
-                  content: TextField(
-                    decoration: InputDecoration(
-                      labelText: "Informe a sua tarefa"
+                  onChanged: (text){
+                  },
+                ),
+                actions: <Widget>[
+                  FlatButton(
+                    child: Text(
+                      "Cancelar"
                     ),
-                    onChanged: (text){
-
+                    onPressed: (){
+                      Navigator.pop(context);
                     },
                   ),
-                  actions: <Widget>[
-                    FlatButton(
-                      child: Text(
-                        "Cancelar"
-                      ),
-                      onPressed: (){
-                        Navigator.pop(context);
-                      },
+                  FlatButton(
+                    child: Text(
+                      "Salvar"
                     ),
-                    FlatButton(
-                      child: Text(
-                        "Salvar"
-                      ),
-                      onPressed: (){
-                        Navigator.pop(context);                        
-                      },
-                    )
-                  ],
-                );
-              }
-            );
-          }
-        ),
-        body: Column(
-          children: <Widget>[
-            Expanded(
-              child: ListView.builder(
-                itemCount: _listaTarefas.length,
-                itemBuilder: (context, index){
-                  return ListTile(
-                    title: Text(_listaTarefas[index]),
-                  );
-                },
-              ),
-            )
-          ],
-        )
+                    onPressed: (){
+                      Navigator.pop(context);                        
+                    },
+                  )
+                ],
+              );
+            }
+          );
+        }
       ),
+      body: Column(
+        children: <Widget>[
+          Expanded(
+            child: ListView.builder(
+              itemCount: _listaTarefas.length,
+              itemBuilder: (context, index){
+                return ListTile(
+                  title: Text(_listaTarefas[index]),
+                );
+              },
+            ),
+          )
+        ],
+      )
     );
   }
 }

@@ -26,14 +26,14 @@ class _HomeState extends State<Home> {
   }
 
   _salvar() async {
-    Database.db = await _recuperarBancoDados();
+    Database bd = await _recuperarBancoDados();
 
     Map<String, dynamic> dadosUsuario = {
       "nome": "Eduardo Mattos",
       "idade": 49
     };
     int id = await bd.insert("usuarios", dadosUsuario);
-    print("Savo id: $id");
+    print("Salvo id: $id");
   }
 
   @override

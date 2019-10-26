@@ -29,22 +29,73 @@ class _HomeState extends State<Home> {
     Database bd = await _recuperarBancoDados();
 
     Map<String, dynamic> dadosUsuario = {
-      "nome": "Eduardo Mattos",
-      "idade": 49
+      "nome": "Sandra Mattos",
+      "idade": 23
     };
     int id = await bd.insert("usuarios", dadosUsuario);
     print("Salvo id: $id");
   }
 
+  _listarUsuarios() async {
+    Database bd = await _recuperarBancoDados();
+
+    String sql = "SELECT * FROM usuarios";
+    List usuarios = await bd.rawQuery(sql);
+
+    for (var usuario in usuarios) {
+      print(
+        "item id: " + usuario['id'].toString() +
+          " nome: " + usuario['nome'] +
+          " idade: " + usuario['idade'].toString()
+      );
+    }
+
+    //print("Usuarios: " + usuarios.toString());
+  }
+
+  _recuperarUsuarioPeloId(int id) async {
+    Database bd = await _recuperarBancoDados();
+
+    List usuarios = await bd.query(
+      "usuarios",
+      columns: [
+        "id",
+        "nome",
+        "idade"
+      ],
+      where: "id = ?",
+      whereArgs: [id]
+    );
+
+    for (var usuario in usuarios) {
+      print(
+        "item id: " + usuario['id'].toString() +
+          " nome: " + usuario['nome'] +
+          " idade: " + usuario['idade'].toString()
+      );
+    }
+  }
+
+  _excluirUsuarioPeloId(int id) async {
+    Database bd = await _recuperarBancoDados();
+
+    int retorno = await bd.delete(
+      "usuarios",
+      where: "id = ?",
+      whereArgs: [id]
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
 
-    _salvar();
+    _excluirUsuarioPeloId(3);
+    _listarUsuarios();
 
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          "Minhas Tarefas"
+          "Usuários"
         ),
         backgroundColor: Colors.purple,
       ),

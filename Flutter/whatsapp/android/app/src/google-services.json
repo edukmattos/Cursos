@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "638005765793",
+    "firebase_url": "https://whatsapp-c7511.firebaseio.com",
+    "project_id": "whatsapp-c7511",
+    "storage_bucket": "whatsapp-c7511.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:638005765793:android:9c0369972496fcb35632e0",
+        "android_client_info": {
+          "package_name": "br.com.ekmtek.whatsapp.whatsapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "638005765793-9rles8hd1a854hflgnj5n3p0enfaqfga.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAEF6L4eMSl48vvT3R0K0YAwN4mxw0P8Kc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "638005765793-9rles8hd1a854hflgnj5n3p0enfaqfga.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

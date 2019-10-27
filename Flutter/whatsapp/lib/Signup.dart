@@ -1,19 +1,19 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
-import 'package:flutter/widgets.dart';
-import 'package:whatsapp/Signup.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:whatsapp/home.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 import 'model/user.dart';
 
-class Login extends StatefulWidget {
+class Signup extends StatefulWidget {
   @override
-  _LoginState createState() => _LoginState();
+  _SignupState createState() => _SignupState();
 }
 
-class _LoginState extends State<Login> {
+class _SignupState extends State<Signup> {
   //Controladores
+  TextEditingController _controllerName = TextEditingController();
   TextEditingController _controllerEmail = TextEditingController();
   TextEditingController _controllerPassword = TextEditingController();
 
@@ -21,40 +21,54 @@ class _LoginState extends State<Login> {
 
   _checkSubmit() {
     //Recupera dados dos campos
+    String name = _controllerName.text;
     String email = _controllerEmail.text;
     String password = _controllerPassword.text;
 
-    if (email.isNotEmpty && email.contains("@")) {
-      //Senha
-      if (password.isNotEmpty) {
-        setState(() {
-          _msgError = "";
-        });
+    //Name
+    if (name.isNotEmpty && name.length > 3) {
+      //Email
+      if (email.isNotEmpty && email.contains("@")) {
+        //Senha
+        if (password.isNotEmpty && password.length >= 6) {
+          setState(() {
+            _msgError = "";
+          });
 
-        User user = User();
-        user.email = email;
-        user.password = password;
+          User user = User();
+          user.name = name;
+          user.email = email;
+          user.password = password;
 
-        _userLogin(user);
+          _userSave(user);
+        } else {
+          setState(() {
+            _msgError = "Senha obrigatória e com mínino 6 caracteres.";
+          });
+        }
       } else {
         setState(() {
-          _msgError = "Senha obrigatória.";
+          _msgError = "E-mail incorreto.";
         });
       }
     } else {
       setState(() {
-        _msgError = "E-mail obrigatório/incorreto.";
+        _msgError = "Nome obrigatório.";
       });
     }
   }
 
-  _userLogin(User user) {
+  _userSave(User user) {
     FirebaseAuth auth = FirebaseAuth.instance;
-
     auth
-        .signInWithEmailAndPassword(email: user.email, password: user.password)
+        .createUserWithEmailAndPassword(
+            email: user.email, password: user.password)
         .then((firebaseUser) {
       setState(() {
+        //Salvar dados do usuario
+        Firestore db = Firestore.instance;
+        db.collection("users").document(firebaseUser.user.uid).setData(user.toMap());
+
         Navigator.pushReplacement(
             context, MaterialPageRoute(builder: (context) => Home()));
       });
@@ -66,26 +80,12 @@ class _LoginState extends State<Login> {
     });
   }
 
-  Future _checkUserIsLogged() async {
-    FirebaseAuth auth = FirebaseAuth.instance;
-    //auth.signOut();
-    FirebaseUser userLogged = await auth.currentUser();
-
-    if (userLogged != null) {
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => Home()));
-    }
-  }
-
-  @override
-  void initState() {
-    _checkUserIsLogged();
-    super.initState();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: Text("Cadastro"),
+      ),
       body: Container(
         decoration: BoxDecoration(color: Color(0xff075E54)),
         padding: EdgeInsets.all(16),
@@ -97,7 +97,7 @@ class _LoginState extends State<Login> {
                 Padding(
                   padding: EdgeInsets.only(bottom: 32),
                   child: Image.asset(
-                    "images/logo.png",
+                    "images/usuario.png",
                     width: 200,
                     height: 150,
                   ),
@@ -105,8 +105,25 @@ class _LoginState extends State<Login> {
                 Padding(
                   padding: EdgeInsets.only(bottom: 8),
                   child: TextFormField(
-                    controller: _controllerEmail,
+                    controller: _controllerName,
                     autofocus: true,
+                    keyboardType: TextInputType.text,
+                    style: TextStyle(fontSize: 20),
+                    decoration: InputDecoration(
+                      contentPadding: EdgeInsets.fromLTRB(32, 16, 32, 16),
+                      hintText: "Nome",
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(32)),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.only(bottom: 8),
+                  child: TextFormField(
+                    controller: _controllerEmail,
+                    autofocus: false,
                     keyboardType: TextInputType.emailAddress,
                     style: TextStyle(fontSize: 20),
                     decoration: InputDecoration(
@@ -138,7 +155,7 @@ class _LoginState extends State<Login> {
                   padding: EdgeInsets.only(top: 16, bottom: 10),
                   child: RaisedButton(
                     child: Text(
-                      "Entrar",
+                      "Cadastrar",
                       style: TextStyle(color: Colors.white, fontSize: 20),
                     ),
                     color: Colors.green,
@@ -152,29 +169,14 @@ class _LoginState extends State<Login> {
                   ),
                 ),
                 Center(
-                  child: GestureDetector(
-                    child: Text(
-                      "Não tem conta ? Cadastre-se aqui !",
-                      style: TextStyle(color: Colors.white),
+                  child: Text(
+                    _msgError,
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 20,
                     ),
-                    onTap: () {
-                      Navigator.push(context,
-                          MaterialPageRoute(builder: (context) => Signup()));
-                    },
                   ),
                 ),
-                Padding(
-                  padding: EdgeInsets.only(top: 16),
-                  child: Center(
-                    child: Text(
-                      _msgError,
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontSize: 20,
-                      ),
-                    ),
-                  ),
-                )
               ],
             ),
           ),

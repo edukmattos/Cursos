@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
+import 'package:whatsapp/RouteGenerator.dart';
 import 'package:whatsapp/Signup.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:whatsapp/home.dart';
 
 import 'model/user.dart';
 
@@ -14,8 +14,8 @@ class Login extends StatefulWidget {
 
 class _LoginState extends State<Login> {
   //Controladores
-  TextEditingController _controllerEmail = TextEditingController();
-  TextEditingController _controllerPassword = TextEditingController();
+  TextEditingController _controllerEmail = TextEditingController(text: "edukmattos@gmail.com");
+  TextEditingController _controllerPassword = TextEditingController(text: "1234567");
 
   String _msgError = "";
 
@@ -55,8 +55,9 @@ class _LoginState extends State<Login> {
         .signInWithEmailAndPassword(email: user.email, password: user.password)
         .then((firebaseUser) {
       setState(() {
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => Home()));
+
+        Navigator.pushReplacementNamed(context, RouteGenerator.ROUTE_HOME);
+        
       });
     }).catchError((error) {
       print("error: " + error.toString());
@@ -72,8 +73,7 @@ class _LoginState extends State<Login> {
     FirebaseUser userLogged = await auth.currentUser();
 
     if (userLogged != null) {
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => Home()));
+      Navigator.pushReplacementNamed(context, RouteGenerator.ROUTE_HOME);
     }
   }
 

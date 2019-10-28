@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:whatsapp/Login.dart';
+import 'package:whatsapp/RouteGenerator.dart';
 import 'package:whatsapp/screens/tabConversations.dart';
 import 'package:whatsapp/screens/tabContacts.dart';
 
@@ -37,7 +38,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     //print("Menu item: " + itemSelected);
     switch (itemSelected) {
       case "Configurações":
-        print("Configurações");
+        Navigator.pushNamed(context, RouteGenerator.ROUTE_PROFILE);
         break;
 
       case "Sair":
@@ -50,8 +51,7 @@ class _HomeState extends State<Home> with SingleTickerProviderStateMixin {
     FirebaseAuth auth = FirebaseAuth.instance;
     await auth.signOut();
 
-    Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (context) => edukmattos()));
+    Navigator.pushReplacementNamed(context, RouteGenerator.ROUTE_SIGNIN);
   }
 
   @override

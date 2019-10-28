@@ -1,5 +1,10 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
+import 'package:whatsapp/RouteGenerator.dart';
 import 'package:whatsapp/model/contact.dart';
+import 'package:whatsapp/model/user.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class TabContacts extends StatefulWidget {
   @override
@@ -7,41 +12,91 @@ class TabContacts extends StatefulWidget {
 }
 
 class _TabContactsState extends State<TabContacts> {
-  List<Contact> listContacts = [
-    Contact("Ana Clara",
-        "https://firebasestorage.googleapis.com/v0/b/whatsapp-c7511.appspot.com/o/profile%2Fperfil1.jpg?alt=media&token=f7e35d81-0236-4e72-8cb9-27ab3c8cc128"),
-    Contact("João Carlos",
-        "https://firebasestorage.googleapis.com/v0/b/whatsapp-c7511.appspot.com/o/profile%2Fperfil2.jpg?alt=media&token=7d0e8543-68c3-41d4-91d1-80d363988f8e"),
-    Contact("Ana Luisa",
-        "https://firebasestorage.googleapis.com/v0/b/whatsapp-c7511.appspot.com/o/profile%2Fperfil3.jpg?alt=media&token=367d8519-7713-48c0-8205-9b13c47addc2"),
-    Contact("Roberto Carlos",
-        "https://firebasestorage.googleapis.com/v0/b/whatsapp-c7511.appspot.com/o/profile%2Fperfil4.jpg?alt=media&token=76b83cad-4100-4969-972d-add05b31a340"),
-    Contact("Rodolfo Santos",
-        "https://firebasestorage.googleapis.com/v0/b/whatsapp-c7511.appspot.com/o/profile%2Fperfil5.jpg?alt=media&token=37617313-9196-4d53-a3f6-d8218d05abee"),
-  ];
+  String _idUserLogged;
+  String _emailUserLogged;
+
+  Future<List<User>> _getContacts() async {
+    Firestore db = Firestore.instance;
+    QuerySnapshot querySnapshot = await db.collection("users").getDocuments();
+
+    List<User> listUsers = List();
+    for (DocumentSnapshot item in querySnapshot.documents) {
+      var getData = item.data;
+
+      print(getData["email"]);
+
+      if (getData["email"] == _emailUserLogged) continue;
+
+      User user = User();
+      user.name = getData["name"];
+      user.email = getData["email"];
+      user.urlImage = getData["urlImage"];
+
+      listUsers.add(user);
+    }
+    return listUsers;
+  }
+
+  _getUser() async {
+    FirebaseAuth auth = FirebaseAuth.instance;
+    FirebaseUser userLogged = await auth.currentUser();
+    _idUserLogged = userLogged.uid;
+    _emailUserLogged = userLogged.email;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _getUser();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-        itemCount: listContacts.length,
-        itemBuilder: (context, index) {
-          Contact contact = listContacts[index];
-
-          return ListTile(
-            contentPadding: EdgeInsets.fromLTRB(16, 8, 16, 8),
-            leading: CircleAvatar(
-              maxRadius: 30,
-              backgroundColor: Colors.grey,
-              backgroundImage: NetworkImage(contact.pathUserImage),
-            ),
-            title: Text(
-              contact.userName,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+    return FutureBuilder<List<User>>(
+      future: _getContacts(),
+      builder: (context, snapshot) {
+        switch (snapshot.connectionState) {
+          case ConnectionState.none:
+          case ConnectionState.waiting:
+            return Center(
+              child: Column(
+                children: <Widget>[
+                  Text("Carregando contatos"),
+                  CircularProgressIndicator()
+                ],
               ),
-            ),
-          );
-        });
+            );
+            break;
+          case ConnectionState.active:
+          case ConnectionState.done:
+            return ListView.builder(
+                itemCount: snapshot.data.length,
+                itemBuilder: (_, index) {
+                  List<User> listItems = snapshot.data;
+                  User user = listItems[index];
+                  return ListTile(
+                    onTap: () {
+                      Navigator.pushNamed(
+                          context, RouteGenerator.ROUTE_MESSAGES,
+                          arguments: user);
+                    },
+                    contentPadding: EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    leading: CircleAvatar(
+                        maxRadius: 30,
+                        backgroundColor: Colors.grey,
+                        backgroundImage: user.urlImage != null
+                            ? NetworkImage(user.urlImage)
+                            : null),
+                    title: Text(
+                      user.name,
+                      style:
+                          TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  );
+                });
+            break;
+        }
+      },
+    );
   }
 }

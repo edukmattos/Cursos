@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart' as prefix0;
+import 'package:whatsapp/RouteGenerator.dart';
 import 'package:whatsapp/home.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
@@ -69,8 +71,7 @@ class _SignupState extends State<Signup> {
         Firestore db = Firestore.instance;
         db.collection("users").document(firebaseUser.user.uid).setData(user.toMap());
 
-        Navigator.pushReplacement(
-            context, MaterialPageRoute(builder: (context) => Home()));
+        Navigator.pushNamedAndRemoveUntil(context, RouteGenerator.ROUTE_HOME, (_) => false);
       });
     }).catchError((error) {
       print("error: " + error.toString());

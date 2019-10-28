@@ -28,6 +28,7 @@ class _TabContactsState extends State<TabContacts> {
       if (getData["email"] == _emailUserLogged) continue;
 
       User user = User();
+      user.idUser = item.documentID;
       user.name = getData["name"];
       user.email = getData["email"];
       user.urlImage = getData["urlImage"];

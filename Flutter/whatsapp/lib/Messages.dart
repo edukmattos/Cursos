@@ -1,8 +1,11 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:whatsapp/model/message.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'model/user.dart';
 
@@ -16,50 +19,83 @@ class Messages extends StatefulWidget {
 }
 
 class _MessagesState extends State<Messages> {
-
+  File _msgFile;
+  bool _uploadingFile = false;
   String _idUserLogged;
   String _idUserRecipient;
-
-  List<String> _msgList = [
-    "Oi !",
-    "Oi !",
-    "Tudo bem ?",
-    "Tudo. E ai'?",
-    "Aqui ? Vamos indo.",
-    "Vc viu as notícias da aprovação da Previdência ?",
-    "Sim, ouvi. Não adianta nada argumentar, eles querem aprovar de qualquer para fazer com que o povo brasileiro sofra mais ainada !",
-    "Pois é. De nada adianta se a roubalheira continuar !"
-  ];
-
+  Firestore db = Firestore.instance;
   TextEditingController _controllerMsgText = TextEditingController();
 
   _msgSend() {
     String _msgText = _controllerMsgText.text;
-    if(_msgText.isNotEmpty){
-
+    if (_msgText.isNotEmpty) {
       Message message = Message();
-
       message.idUser = _idUserLogged;
       message.msg = _msgText;
       message.urlFile = "";
       message.msgType = "text";
 
       _msgSave(_idUserLogged, _idUserRecipient, message);
+      _msgSave(_idUserRecipient, _idUserLogged, message);
     }
   }
 
   _msgSave(String idUserFrom, String idUserRecipient, Message msg) async {
-    Firestore db = Firestore.instance;
-    
-    await db.collection("messages")
-    .document(idUserFrom)
-    .collection(idUserRecipient)
-    .add(msg.toMap());
+    await db
+        .collection("messages")
+        .document(idUserFrom)
+        .collection(idUserRecipient)
+        .add(msg.toMap());
 
     _controllerMsgText.clear();
   }
 
-  _fileSend() {}
+  _fileSend() async {
+    File _msgFileSelected;
+    _msgFileSelected = await ImagePicker.pickImage(source: ImageSource.gallery);
+
+    _uploadingFile = true;
+
+    String fileName = DateTime.now().millisecondsSinceEpoch.toString();
+
+    FirebaseStorage storage = FirebaseStorage.instance;
+    StorageReference dirRoot = storage.ref();
+    StorageReference file =
+        dirRoot.child("messages").child(_idUserLogged).child(fileName + ".jpg");
+    StorageUploadTask task = file.putFile(_msgFileSelected);
+
+    //Controlar o progresso do upload
+    task.events.listen((StorageTaskEvent storageEvent) {
+      if (storageEvent.type == StorageTaskEventType.progress) {
+        setState(() {
+          _uploadingFile = true;
+        });
+      } else if (storageEvent.type == StorageTaskEventType.success) {
+        setState(() {
+          _uploadingFile = false;
+        });
+      }
+    });
+
+    //Recuperar url da imagem
+    task.onComplete.then((StorageTaskSnapshot snapshot) {
+      _getUrlFile(snapshot);
+    });
+  }
+
+  Future _getUrlFile(StorageTaskSnapshot snapshot) async {
+    String url = await snapshot.ref.getDownloadURL();
+
+    Message message = Message();
+    message.idUser = _idUserLogged;
+    message.msg = "";
+    message.urlFile = url;
+    message.msgType = "image";
+
+    _msgSave(_idUserLogged, _idUserRecipient, message);
+    _msgSave(_idUserRecipient, _idUserLogged, message);
+
+  }
 
   _getUser() async {
     FirebaseAuth auth = FirebaseAuth.instance;
@@ -84,7 +120,7 @@ class _MessagesState extends State<Messages> {
           Expanded(
             child: Padding(
               padding: EdgeInsets.only(right: 8),
-              child: TextFormField(
+              child: TextField(
                 controller: _controllerMsgText,
                 autofocus: true,
                 keyboardType: TextInputType.text,
@@ -96,7 +132,9 @@ class _MessagesState extends State<Messages> {
                     fillColor: Colors.white,
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(32)),
-                    prefixIcon: IconButton(
+                    prefixIcon:
+                    _uploadingFile ? CircularProgressIndicator()
+                        : IconButton(
                       icon: Icon(Icons.camera_alt),
                       onPressed: () {
                         _fileSend();
@@ -120,40 +158,81 @@ class _MessagesState extends State<Messages> {
       ),
     );
 
-    var listView = Expanded(
-        child: ListView.builder(
-      itemCount: _msgList.length,
-      itemBuilder: (context, index) {
-
+    var stream = StreamBuilder(
+      stream: db
+          .collection("messages")
+          .document(_idUserLogged)
+          .collection(_idUserRecipient)
+          .snapshots(),
+      builder: (context, snapshot) {
         double _widthContainer = MediaQuery.of(context).size.width * 0.8;
-
-        Alignment _alignment = Alignment.centerRight;
-        Color _color = Color(0xffd2ffa5);
-
-        if(index % 2 == 0){
-          _alignment = Alignment.centerLeft;
-          _color = Colors.white;
-        }
-
-        return Align(
-          alignment: _alignment,
-          child: Padding(
-            padding: EdgeInsets.all(6),
-            child: Container(
-              width: _widthContainer,
-              padding: EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                  color: _color,
-                  borderRadius: BorderRadius.all(Radius.circular(8))),
-              child: Text(
-                _msgList[index],
-                style: TextStyle(fontSize: 18),
+        switch (snapshot.connectionState) {
+          case ConnectionState.none:
+          case ConnectionState.waiting:
+            return Center(
+              child: Column(
+                children: <Widget>[
+                  Text("Carregando mensagens"),
+                  CircularProgressIndicator()
+                ],
               ),
-            ),
-          ),
-        );
+            );
+            break;
+          case ConnectionState.active:
+          case ConnectionState.done:
+            QuerySnapshot querySnapshot = snapshot.data;
+
+            if (snapshot.hasError) {
+              return Expanded(
+                child: Text("Erro ao carregar os dados!"),
+              );
+            } else {
+              return Expanded(
+                child: ListView.builder(
+                    itemCount: querySnapshot.documents.length,
+                    itemBuilder: (context, index) {
+                      //recupera mensagem
+                      List<DocumentSnapshot> messages =
+                          querySnapshot.documents.toList();
+                      DocumentSnapshot item = messages[index];
+
+                      double _widthContainer =
+                          MediaQuery.of(context).size.width * 0.8;
+
+                      //Define cores e alinhamentos
+                      Alignment alinhamento = Alignment.centerRight;
+                      Color cor = Color(0xffd2ffa5);
+                      if (_idUserLogged != item["idUser"]) {
+                        alinhamento = Alignment.centerLeft;
+                        cor = Colors.white;
+                      }
+
+                      return Align(
+                        alignment: alinhamento,
+                        child: Padding(
+                          padding: EdgeInsets.all(6),
+                          child: Container(
+                            width: _widthContainer,
+                            padding: EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                                color: cor,
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(8))),
+                            child:
+                            item["msgType"] == "text"
+                                ? Text(item["msg"],style: TextStyle(fontSize: 18),)
+                              : Image.network(item["urlFile"]),
+                          ),
+                        ),
+                      );
+                    }),
+              );
+            }
+
+            break;
+        }
       },
-    ));
+    );
 
     return Scaffold(
         appBar: AppBar(
@@ -182,7 +261,7 @@ class _MessagesState extends State<Messages> {
               padding: EdgeInsets.all(8),
               child: Column(
                 children: <Widget>[
-                  listView,
+                  stream,
                   msgInputBox,
                 ],
               ),

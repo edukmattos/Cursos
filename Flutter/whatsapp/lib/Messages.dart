@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:whatsapp/model/conversation.dart';
 import 'package:whatsapp/model/message.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
@@ -35,9 +36,37 @@ class _MessagesState extends State<Messages> {
       message.urlFile = "";
       message.msgType = "text";
 
+      //Salvar mensagem texto
+      //Remetente
       _msgSave(_idUserLogged, _idUserRecipient, message);
+      //Destinatario
       _msgSave(_idUserRecipient, _idUserLogged, message);
+
+      //Salvar última conversa
+      _conversationSave(message);
     }
+  }
+
+  _conversationSave(Message message){
+    //Remetente
+    Conversation conversationSender = Conversation();
+    conversationSender.idUserSender = _idUserLogged;
+    conversationSender.idUserRecipient = _idUserRecipient;
+    conversationSender.message = message.msg;
+    conversationSender.fromUserName = widget.contact.name;
+    conversationSender.pathUserImage = widget.contact.urlImage;
+    conversationSender.msgType = message.msgType;
+    conversationSender.save();
+
+    //Destinatario
+    Conversation conversationRecipient = Conversation();
+    conversationRecipient.idUserSender = _idUserRecipient;
+    conversationRecipient.idUserRecipient = _idUserLogged;
+    conversationRecipient.message = message.msg;
+    conversationRecipient.fromUserName = widget.contact.name;
+    conversationRecipient.pathUserImage = widget.contact.urlImage;
+    conversationRecipient.msgType = message.msgType;
+    conversationRecipient.save();
   }
 
   _msgSave(String idUserFrom, String idUserRecipient, Message msg) async {
@@ -180,12 +209,11 @@ class _MessagesState extends State<Messages> {
             break;
           case ConnectionState.active:
           case ConnectionState.done:
+
             QuerySnapshot querySnapshot = snapshot.data;
 
             if (snapshot.hasError) {
-              return Expanded(
-                child: Text("Erro ao carregar os dados!"),
-              );
+              return Text("Erro ao carregar os dados!");
             } else {
               return Expanded(
                 child: ListView.builder(

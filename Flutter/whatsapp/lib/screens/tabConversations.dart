@@ -24,7 +24,7 @@ class _TabConversationsState extends State<TabConversations> {
   Stream<QuerySnapshot> _addListenerConversations() {
     final stream = db
         .collection("conversations")
-        .document(_idUserLogged())
+        .document(_idUserLogged)
         .collection("conversation_last")
         .snapshots();
 

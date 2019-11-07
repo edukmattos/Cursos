@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "239765618096",
+    "firebase_url": "https://uber-a2628.firebaseio.com",
+    "project_id": "uber-a2628",
+    "storage_bucket": "uber-a2628.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:239765618096:android:a77add24d5bbfe5b47ea75",
+        "android_client_info": {
+          "package_name": "br.com.ekmtek.uber.udemy_uber_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "239765618096-0sk3r63ee9gh6htbflamdq3vv7ceaidq.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "br.com.ekmtek.uber.udemy_uber_app",
+            "certificate_hash": "c86789c65a675848ee76da1399df2772cc4892e4"
+          }
+        },
+        {
+          "client_id": "239765618096-fjmopk34s4ae26nkfhpit0cf1607jchm.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBEFzcMkEY4nnwnnjbwsoyGHjK9US96UGY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "239765618096-fjmopk34s4ae26nkfhpit0cf1607jchm.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
